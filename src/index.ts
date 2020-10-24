@@ -22,17 +22,6 @@ export function main() {
              * START API (express server)
              */
             api.start();
-
-
-            /*
-            let telegramUser: TelegramUser = new TelegramUser();
-            telegramUser.chatId = 1023621712;
-            telegramUser.username = "leonardx";
-            telegramUser.guild = "blacklusionx";
-            telegramUser.mainnet_mute = new Date();
-
-            await database.manager.save(telegramUser);
-             */
         })
         .catch((error) => {
             logger.error("Error while connecting to database ", error);
