@@ -45,7 +45,7 @@ export function start() {
         await ctx.replyWithHTML("What is the name of the account you would like to monitor?");
     })
     startScene.on('text', (ctx) => {
-        let guildName = ctx.message.text;
+        let guildName = ctx.message.text.toLowerCase();
         database.manager.findOne(Guild, {
             where: [{name: guildName}],
         }).then(guild => {
