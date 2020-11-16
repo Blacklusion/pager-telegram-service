@@ -60,6 +60,7 @@ export function start() {
 
                 ctx.replyWithHTML("Alright you are all setup <b>" + telegramUser.guild + "</b> is being monitored")
                 ctx.replyWithHTML("Use /settings, to adjust notifications settings.")
+                ctx.replyWithHTML("Use /lastvalidation, to get the results of our last validation.")
                 ctx.scene.leave();
                 return;
             } else {
@@ -209,7 +210,7 @@ export function start() {
             database.manager.update(TelegramUser, user.chatId, {mainnet_subscribe: true})
             ctx.replyWithHTML("✅ Subscribed for <b>" + mainnetText + " again!</b>")
         })
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneTestnet.hears(/✅ Start monitoring.*/, async ctx => {
         await database.manager.findOne(TelegramUser, {
@@ -218,20 +219,20 @@ export function start() {
             database.manager.update(TelegramUser, user.chatId, {testnet_subscribe: true})
             ctx.replyWithHTML("✅ Subscribed for <b>" + testnetText + " again!</b>")
         })
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
 
     settingsSceneBoth.hears(/🏛 Organization.*/, async ctx => {
         await organization(ctx, ChainSelection.BOTH)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneMainnet.hears(/🏛 Organization.*/, async ctx => {
         await organization(ctx, ChainSelection.MAINNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneTestnet.hears(/🏛 Organization.*/, async ctx => {
         await organization(ctx, ChainSelection.TESTNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
 
     function organization(ctx: SceneContextMessageUpdate, chain: ChainSelection) {
@@ -276,15 +277,15 @@ export function start() {
 
     settingsSceneBoth.hears(/🤝 P2P.*/, async ctx => {
         await seed(ctx, ChainSelection.BOTH)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneMainnet.hears(/🤝 P2P.*/, async ctx => {
         await seed(ctx, ChainSelection.MAINNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneTestnet.hears(/🤝 P2P.*/, async ctx => {
         await seed(ctx, ChainSelection.TESTNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
 
     function seed(ctx: SceneContextMessageUpdate, chain: ChainSelection) {
@@ -327,15 +328,15 @@ export function start() {
 
     settingsSceneBoth.hears(/🌐 API.*/, async ctx => {
         await api(ctx, ChainSelection.BOTH)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneMainnet.hears(/🌐 API.*/, async ctx => {
         await api(ctx, ChainSelection.MAINNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneTestnet.hears(/🌐 API.*/, async ctx => {
         await api(ctx, ChainSelection.TESTNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
 
     function api(ctx: SceneContextMessageUpdate, chain: ChainSelection) {
@@ -384,15 +385,15 @@ export function start() {
 
     settingsSceneBoth.hears(/📚 History.*/, async ctx => {
         await history(ctx, ChainSelection.BOTH)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneMainnet.hears(/📚 History.*/, async ctx => {
         await history(ctx, ChainSelection.MAINNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
     settingsSceneTestnet.hears(/📚 History.*/, async ctx => {
         await history(ctx, ChainSelection.TESTNET)
-        ctx.scene.reenter()
+        ctx.scene.enter('settings')
     })
 
     function history(ctx: SceneContextMessageUpdate, chain: ChainSelection) {
