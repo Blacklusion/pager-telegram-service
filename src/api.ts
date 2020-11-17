@@ -1,10 +1,10 @@
-import {logger} from "./common";
+import {createMessageFromJson, logger, MessageType} from "./common";
 import * as express from 'express';
 import {getConnection} from "typeorm";
 import {TelegramUser} from "./database/entity/TelegramUser";
+import * as telegraf from "telegraf";
 import {Telegraf} from "telegraf";
 import * as config from "config";
-import * as telegraf from "telegraf";
 
 const falseAlarmText: string = "Report as false alarm"
 
@@ -42,8 +42,10 @@ export function start() {
     api.post("/organization", (req, res) => {
         try {
             // Correct format for post data
-            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.message == "string") {
+            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && req.body.messages) {
                 logger.debug("/organization \t Received request in correct format: ", req.body);
+
+                const message = createMessageFromJson(req.body.messages, req.body.isMainnet, MessageType.organization)
 
                 // Request all users from database that have subscribed to this guild
                 database.manager.find(TelegramUser, {
@@ -53,11 +55,11 @@ export function start() {
 
                         // Only send message if the user has enabled notifications for this chain and category
                         if (req.body.isMainnet ? (user.mainnet_subscribe && user.mainnet_organization) : (user.testnet_subscribe && user.testnet_organization)) {
-                            bot.telegram.sendMessage(user.chatId, req.body.message, telegraf.Extra.HTML().markup((m) =>
+                            bot.telegram.sendMessage(user.chatId, message, telegraf.Extra.HTML().markup((m) =>
                                 m.inlineKeyboard([
                                     m.callbackButton(falseAlarmText, 'falseAlarm')
                                 ])));
-                            logger.debug("/organization \t Sent message to " + user.username);
+                            logger.info("/organization \t Sent message to " + user.username);
                         }
                     })
                 });
@@ -66,7 +68,7 @@ export function start() {
 
             // Wrong format for post data
             else {
-                logger.info("/organization \t Received message in WRONG format: ", req.body)
+                logger.error("/organization \t Received message in WRONG format: ", req.body)
                 res
                     .status(400)
                     .send("Invalid Post data. Make sure it contains \"guild_name\", \"isMainnet\" and \"message\"");
@@ -82,8 +84,10 @@ export function start() {
     api.post("/api", (req, res) => {
         try {
             // Correct format for post data
-            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.message == "string") {
+            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.headerMessage == "string" && req.body.messages) {
                 logger.debug("/api \t Received request in correct format: ", req.body);
+
+                const message = createMessageFromJson(req.body.messages,req.body.isMainnet, MessageType.api, req.body.headerMessage)
 
                 // Request all users from database that have subscribed to this guild
                 database.manager.find(TelegramUser, {
@@ -93,11 +97,11 @@ export function start() {
 
                         // Only send message if the user has enabled notifications for this chain and category
                         if (req.body.isMainnet ? (user.mainnet_subscribe && user.mainnet_api) : (user.testnet_subscribe && user.testnet_api)) {
-                            bot.telegram.sendMessage(user.chatId, req.body.message, telegraf.Extra.HTML().markup((m) =>
+                            bot.telegram.sendMessage(user.chatId, message, telegraf.Extra.HTML().markup((m) =>
                                 m.inlineKeyboard([
                                     m.callbackButton(falseAlarmText, 'falseAlarm')
                                 ])))
-                            logger.debug("/api \t Sent message to " + user.username);
+                            logger.info("/api \t Sent message to " + user.username);
                         }
                     })
                 });
@@ -106,7 +110,7 @@ export function start() {
 
             // Wrong format for post data
             else {
-                logger.info("/api \t Received message in WRONG format: ", req.body)
+                logger.error("/api \t Received message in WRONG format: ", req.body)
                 res
                     .status(400)
                     .send("Invalid Post data. Make sure it contains \"guild_name\", \"isMainnet\" and \"message\"");
@@ -122,8 +126,10 @@ export function start() {
     api.post("/history", (req, res) => {
         try {
             // Correct format for post data
-            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.message == "string") {
+            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.headerMessage == "string" && req.body.messages) {
                 logger.debug("/history \t Received request in correct format: ", req.body);
+
+                const message = createMessageFromJson(req.body.messages,req.body.isMainnet, MessageType.history, req.body.headerMessage)
 
                 // Request all users from database that have subscribed to this guild
                 database.manager.find(TelegramUser, {
@@ -133,11 +139,11 @@ export function start() {
 
                         // Only send message if the user has enabled notifications for this chain and category
                         if (req.body.isMainnet ? (user.mainnet_subscribe && user.mainnet_history) : (user.testnet_subscribe && user.testnet_history)) {
-                            bot.telegram.sendMessage(user.chatId, req.body.message, telegraf.Extra.HTML().markup((m) =>
+                            bot.telegram.sendMessage(user.chatId, message, telegraf.Extra.HTML().markup((m) =>
                                 m.inlineKeyboard([
                                     m.callbackButton(falseAlarmText, 'falseAlarm')
                                 ])))
-                            logger.debug("/history \t Sent message to " + user.username);
+                            logger.info("/history \t Sent message to " + user.username);
                         }
                     })
                 });
@@ -146,7 +152,7 @@ export function start() {
 
             // Wrong format for post data
             else {
-                logger.info("/history \t Received message in WRONG format: ", req.body)
+                logger.error("/history \t Received message in WRONG format: ", req.body)
                 res
                     .status(400)
                     .send("Invalid Post data. Make sure it contains \"guild_name\", \"isMainnet\" and \"message\"");
@@ -162,8 +168,10 @@ export function start() {
     api.post("/seed", (req, res) => {
         try {
             // Correct format for post data
-            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.message == "string") {
+            if (typeof req.body && typeof req.body.guild_name == "string" && typeof req.body.isMainnet == "boolean" && typeof req.body.headerMessage == "string" && req.body.messages) {
                 logger.debug("/seed \t Received request in correct format: ", req.body);
+
+                const message = createMessageFromJson(req.body.messages,req.body.isMainnet, MessageType.seed, req.body.headerMessage)
 
                 // Request all users from database that have subscribed to this guild
                 database.manager.find(TelegramUser, {
@@ -173,11 +181,11 @@ export function start() {
 
                         // Only send message if the user has enabled notifications for this chain and category
                         if (req.body.isMainnet ? (user.mainnet_subscribe && user.mainnet_seed) : (user.testnet_subscribe && user.testnet_seed)) {
-                            bot.telegram.sendMessage(user.chatId, req.body.message, telegraf.Extra.HTML().markup((m) =>
+                            bot.telegram.sendMessage(user.chatId, message, telegraf.Extra.HTML().markup((m) =>
                                 m.inlineKeyboard([
                                     m.callbackButton(falseAlarmText, 'falseAlarm')
                                 ])))
-                            logger.debug("/seed \t Sent message to " + user.username);
+                            logger.info("/seed \t Sent message to " + user.username);
                         }
                     })
                 });
@@ -186,7 +194,7 @@ export function start() {
 
             // Wrong format for post data
             else {
-                logger.debug("/seed \t Received message in WRONG format: ", req.body)
+                logger.error("/seed \t Received message in WRONG format: ", req.body)
                 res
                     .status(400)
                     .send("Invalid Post data. Make sure it contains \"guild_name\", \"isMainnet\" and \"message\"");
@@ -199,6 +207,7 @@ export function start() {
     /**
      * PRODUCER
      */
+    /*
     api.post("/producer", (req, res) => {
         try {
             // Correct format for post data
@@ -235,7 +244,7 @@ export function start() {
             logger.fatal("Error during /producer API call: ", error);
         }
     })
-
+*/
     /**
      * SEND TO ALL: Should only be used in EMERGENCIES (e.g. Informing all users before maintenance)
      * {

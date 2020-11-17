@@ -1,13 +1,12 @@
 import * as telegraf from "telegraf";
 import {BaseScene, session, Stage, Telegraf} from "telegraf";
 import * as config from "config";
-import {logger} from "./common";
+import { logger } from "./common";
 import {TelegramUser} from "./database/entity/TelegramUser";
 import {getConnection} from "typeorm";
 import {ChainSelection} from "./ChainSelection";
 import {SceneContextMessageUpdate} from "telegraf/typings/stage";
 import {Guild} from "./database/entity/Guild";
-import {createDeflateRaw} from "zlib";
 
 export function start() {
     const database = getConnection();
@@ -49,7 +48,6 @@ export function start() {
         database.manager.findOne(Guild, {
             where: [{name: guildName}],
         }).then(guild => {
-            console.log(guild)
             if(guild) {
                 let telegramUser = new TelegramUser();
                 telegramUser.guild = guildName;
@@ -58,9 +56,9 @@ export function start() {
 
                 database.manager.save(telegramUser);
 
+                logger.info(ctx.chat.username + " signed up for " + guildName)
                 ctx.replyWithHTML("Alright you are all setup <b>" + telegramUser.guild + "</b> is being monitored")
                 ctx.replyWithHTML("Use /settings, to adjust notifications settings.")
-                ctx.replyWithHTML("Use /lastvalidation, to get the results of our last validation.")
                 ctx.scene.leave();
                 return;
             } else {
@@ -522,25 +520,27 @@ export function start() {
 
     const falseAlarmScene = new BaseScene('falseAlarm')
     falseAlarmScene.enter(ctx => {
-            ctx.reply('Please provide additional information, that may help to prevent future false alarms. Why do think this is a bug?', telegraf.Extra.HTML().markup((m) =>
-                m.inlineKeyboard([
-                    m.callbackButton('cancel', 'falseAlarmCancel')
-                ])))
-            console.log(ctx.update.callback_query.message)
+        logger.info("False alarm reported: ", ctx.update.callback_query.message)
+            ctx.reply("Please provide additional information, that may help to prevent future false alarms. Why do think this is a bug?", {reply_to_message_id: ctx.update.callback_query.message.message_id,
+                reply_markup: telegraf.Markup.inlineKeyboard([
+                    telegraf.Markup.callbackButton('cancel', 'falseAlarmCancel')
+                ])
+
+        })
         }
     )
 
     falseAlarmScene.action("falseAlarmCancel", (ctx) => {
+        logger.info("Canceled")
         ctx.scene.leave();
         return ctx.replyWithHTML('OK, no report was sent.')
     })
 
     falseAlarmScene.on("text", ctx => {
-        console.log(ctx.update)
+        logger.info("Not canceled:", ctx.update.message)
         ctx.scene.leave();
         return ctx.replyWithHTML('Thank you for your feedback! The administrator was informed about your issue. Sorry for the inconvenience :(')
     })
-
 
     /**
      * START BOT
